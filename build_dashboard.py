@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+
 import os
 """Build the 'Forensic Automation' dashboard in OpenSearch Dashboards
 (Wazuh, OSD 2.19.4) via the Saved Objects API. Idempotent (overwrite=true).
