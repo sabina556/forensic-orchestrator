@@ -98,5 +98,5 @@ lifecycle:
   cold_days: 30
   disk_pressure_pct: 85
   archive_root: "/opt/forensic-orchestrator/storage/archive"
-  compress_evidence_min_bytes: 1048576   # сжимать только evidence-файлы >= 1 MiB
-  retention_days: 0                      # 0 = никогда не удалять автоматически
+  compress_evidence_min_bytes: 1048576   
+  retention_days: 0                     
