@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+
 """
 incident_dedup.py — incident-level alert correlation / debouncing.
 
