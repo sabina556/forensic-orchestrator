@@ -23,9 +23,8 @@ agent:
   ssh_key: "/home/wazuhadmin/.ssh/forensic_key"
   ssh_opts: "-c aes128-gcm@openssh.com -o StrictHostKeyChecking=no -o ConnectTimeout=10"
 
-# ----------------------------------------------------------------
 # Collection settings
-# ----------------------------------------------------------------
+
 collection:
   # Memory acquisition method: kcore | kcore_segments | none
   memory_method: "kcore_segments"
