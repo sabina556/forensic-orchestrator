@@ -14,9 +14,9 @@ orchestrator:
   # Master log
   log_file: "/opt/forensic-orchestrator/logs/orchestrator.log"
 
-# ----------------------------------------------------------------
+
 # Target endpoint (the Agent we collect evidence FROM)
-# ----------------------------------------------------------------
+
 agent:
   host: "192.168.64.10"
   user: "root"
