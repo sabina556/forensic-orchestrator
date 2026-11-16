@@ -1,10 +1,5 @@
-# ============================================================
+
 # Forensic Orchestrator — Central Configuration
-# ============================================================
-# Wazuh-Based Automated Forensic Framework
-# Politecnico di Torino — MSc Cybersecurity 2026
-# Author: Sabina Tursunova
-# ============================================================
 
 orchestrator:
   # HTTP listener (receives alerts from forensic_dispatch.sh)
