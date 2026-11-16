@@ -1,4 +1,4 @@
-
+#!/usr/bin/env python3
 import os
 import json, ssl, base64, urllib.request, urllib.error
 OSD = "https://localhost"; USER, PASS = "admin", os.environ.get("OS_PASS", "CHANGE_ME")

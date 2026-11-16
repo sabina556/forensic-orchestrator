@@ -1,4 +1,4 @@
-
+#!/usr/bin/env python3
 """
 threat_analysis.py — post-collection threat-analysis layer for sealed cases.
 

@@ -1,4 +1,4 @@
-
+#!/usr/bin/env python3
 """
 dashboard_exporter.py - export sealed forensic case metadata into the Wazuh
 indexer (OpenSearch) index 'forensic-cases' for dashboard visualisation.

@@ -1,4 +1,4 @@
-
+#!/usr/bin/env python3
 import os
 """Layer B (IDS detections on wazuh-alerts-*) + reassemble the unified
 'Forensic Automation' dashboard with two sections (IDS layer / forensic layer),
