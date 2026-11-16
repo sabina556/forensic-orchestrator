@@ -1,0 +1,13 @@
+[Unit]
+Description=Forensic Reports portal (per-case PDF browse and download)
+After=network-online.target
+
+[Service]
+Type=simple
+User=wazuhadmin
+WorkingDirectory=/opt/forensic-orchestrator
+ExecStart=/usr/bin/python3 /opt/forensic-orchestrator/report_portal.py
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

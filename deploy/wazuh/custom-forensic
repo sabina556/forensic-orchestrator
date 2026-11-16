@@ -1,0 +1,85 @@
+#!/usr/bin/env python3
+"""
+custom-forensic — Wazuh integration script.
+
+Wazuh's integratord invokes this whenever an alert matches the <rule_id> list
+in the <integration> block of ossec.conf. Unlike Active Response (which depends
+on execd and is finicky for local commands on a single-node manager), the
+integration subsystem calls this script directly with the alert, making it a
+robust trigger for forwarding detections to the Forensic Orchestrator.
+
+Invocation (by Wazuh integratord):
+    custom-forensic <alert_file> <api_key> <hook_url>
+
+  argv[1] = path to a JSON file containing the full alert
+  argv[2] = api key from <api_key> (unused here, may be empty)
+  argv[3] = hook url from <hook_url> in ossec.conf
+
+This script reads the alert, extracts the rule/MITRE/agent fields, and POSTs the
+raw Wazuh alert to the orchestrator ingest endpoint. The orchestrator's
+parse_alert() then pulls MITRE technique/tactic enrichment into the case.
+"""
+
+import sys
+import json
+import time
+
+LOG = "/var/ossec/logs/integrations.log"
+DEFAULT_HOOK = "http://127.0.0.1:8080/api/v1/ingest"
+
+
+def log(msg):
+    try:
+        with open(LOG, "a") as f:
+            f.write(f"{time.strftime('%Y-%m-%d %H:%M:%S')} custom-forensic: {msg}\n")
+    except Exception:
+        pass
+
+
+def main():
+    # --- parse Wazuh integration arguments ---
+    if len(sys.argv) < 2:
+        log("ERROR no alert file argument provided")
+        sys.exit(0)
+
+    alert_file = sys.argv[1]
+    hook_url = sys.argv[3] if len(sys.argv) > 3 and sys.argv[3] else DEFAULT_HOOK
+
+    # --- read the alert JSON written by Wazuh ---
+    try:
+        with open(alert_file) as f:
+            alert = json.load(f)
+    except Exception as e:
+        log(f"ERROR cannot read alert file {alert_file}: {e}")
+        sys.exit(0)
+
+    rule = alert.get("rule", {})
+    rule_id = rule.get("id", "?")
+    mitre = rule.get("mitre_techniques") or rule.get("mitre", {}).get("id") if isinstance(rule.get("mitre"), dict) else rule.get("mitre_techniques")
+    log(f"triggered by rule {rule_id} (mitre={mitre}) -> forwarding to {hook_url}")
+
+    # --- POST the raw alert to the orchestrator ---
+    payload = json.dumps({"alert": alert}).encode("utf-8")
+
+    # Use urllib (always present) to avoid external deps
+    import urllib.request
+    import urllib.error
+    req = urllib.request.Request(
+        hook_url, data=payload,
+        headers={"Content-Type": "application/json"}, method="POST",
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            code = resp.getcode()
+            log(f"orchestrator responded HTTP {code} for rule {rule_id}")
+    except urllib.error.HTTPError as e:
+        log(f"orchestrator HTTP error {e.code} for rule {rule_id}")
+    except Exception as e:
+        log(f"ERROR posting to orchestrator: {e}")
+
+    # Always exit 0 so Wazuh never marks the integration as failed.
+    sys.exit(0)
+
+
+if __name__ == "__main__":
+    main()

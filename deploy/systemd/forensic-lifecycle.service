@@ -1,0 +1,9 @@
+[Unit]
+Description=Forensic case storage lifecycle enforcement
+After=network-online.target
+
+[Service]
+Type=oneshot
+User=wazuhadmin
+WorkingDirectory=/opt/forensic-orchestrator
+ExecStart=/usr/bin/python3 /opt/forensic-orchestrator/lifecycle_manager.py enforce --apply

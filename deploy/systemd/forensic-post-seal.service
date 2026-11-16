@@ -1,0 +1,15 @@
+[Unit]
+Description=Forensic orchestrator post-seal service (Wazuh event, dashboard, report, notification)
+After=network-online.target
+
+[Service]
+Type=simple
+User=wazuhadmin
+WorkingDirectory=/opt/forensic-orchestrator
+EnvironmentFile=-/etc/forensic-notify.env
+ExecStart=/usr/bin/python3 /opt/forensic-orchestrator/post_seal_hook.py
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

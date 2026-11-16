@@ -1,0 +1,6 @@
+  <integration>
+    <name>custom-forensic</name>
+    <hook_url>http://127.0.0.1:8080/api/v1/ingest</hook_url>
+    <rule_id>100210,100220,100240,100250,100260</rule_id>
+    <alert_format>json</alert_format>
+  </integration>

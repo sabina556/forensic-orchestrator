@@ -1,0 +1,26 @@
+[Unit]
+Description=Forensic Orchestrator (HTTP ingest listener)
+Documentation=Politecnico di Torino - Automated Forensic Evidence Collection Framework
+After=network-online.target wazuh-manager.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=wazuhadmin
+Group=wazuhadmin
+WorkingDirectory=/opt/forensic-orchestrator
+Environment=PYTHONPATH=/opt/forensic-orchestrator
+Environment=FORENSIC_CONFIG=/opt/forensic-orchestrator/config.yaml
+# Listener mode (no --once): serves POST /api/v1/ingest on 127.0.0.1:8080
+ExecStart=/usr/bin/python3 /opt/forensic-orchestrator/orchestrator.py
+Restart=on-failure
+RestartSec=5
+# Give long-running memory acquisition room before systemd considers it failed
+TimeoutStartSec=30
+
+# Hardening (relaxed where the pipeline genuinely needs access)
+NoNewPrivileges=false
+PrivateTmp=false
+
+[Install]
+WantedBy=multi-user.target

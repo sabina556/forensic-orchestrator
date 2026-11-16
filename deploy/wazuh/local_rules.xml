@@ -1,0 +1,70 @@
+<group name="forensic,local,attack,">
+
+  <rule id="100210" level="12">
+    <if_sid>5402,5403</if_sid>
+    <field name="command" type="pcre2">/etc/shadow</field>
+    <description>Credential dumping: privileged access to /etc/shadow</description>
+    <mitre>
+      <id>T1003.008</id>
+    </mitre>
+    <group>credential_access,</group>
+  </rule>
+
+  <rule id="100220" level="10">
+    <if_sid>5902</if_sid>
+    <description>New local account created (possible persistence)</description>
+    <mitre>
+      <id>T1136.001</id>
+    </mitre>
+    <group>persistence,</group>
+  </rule>
+
+  <rule id="100240" level="12">
+    <if_sid>5402,5403</if_sid>
+    <field name="command" type="pcre2">(truncate|shred|tee|/rm|/dd).*/var/log|journalctl.*vacuum</field>
+    <description>Anti-forensics: system log clearing/destruction via privileged command</description>
+    <mitre>
+      <id>T1070.002</id>
+    </mitre>
+    <group>defense_evasion,</group>
+  </rule>
+
+  <rule id="100250" level="10">
+    <if_sid>5402,5403</if_sid>
+    <field name="command" type="pcre2">(cat|getent|less|more|head|tail).*(/etc/passwd|/etc/group)</field>
+    <description>Account discovery: enumeration of local accounts via privileged read</description>
+    <mitre>
+      <id>T1087.001</id>
+    </mitre>
+    <group>discovery,</group>
+  </rule>
+
+  <rule id="100260" level="12">
+    <if_sid>5402,5403</if_sid>
+    <field name="command" type="pcre2">(bash|sh|/bin/bash|/bin/sh)\s+-c.*(curl|wget|/dev/tcp|nc |ncat|base64)</field>
+    <description>Suspicious shell execution: interpreter invoked with download/reverse-shell pattern</description>
+    <mitre>
+      <id>T1059.004</id>
+    </mitre>
+    <group>execution,</group>
+  </rule>
+
+</group>
+<!-- Post-seal feedback rules: the sealing of a forensic case, or an incomplete collection, becomes a
+     Wazuh alert itself. These IDs must NOT be added to the custom-forensic integration rule_id list
+     (that would re-trigger collection on its own events). -->
+<group name="forensic,forensic_case,">
+  <rule id="100300" level="5">
+    <decoded_as>json</decoded_as>
+    <field name="forensic.event">^case_sealed$</field>
+    <description>Forensic case sealed: $(forensic.case_id), evidence sealed $(forensic.tte_s) s after the alert, $(forensic.artefacts) artefacts</description>
+    <group>forensic_case_sealed,</group>
+  </rule>
+
+  <rule id="100301" level="12">
+    <decoded_as>json</decoded_as>
+    <field name="forensic.event">^collection_incomplete$</field>
+    <description>Forensic collection incomplete: $(forensic.case_id): $(forensic.reason)</description>
+    <group>forensic_collection_failure,</group>
+  </rule>
+</group>

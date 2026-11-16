@@ -1,0 +1,12 @@
+# evidence and generated data never go into the repository
+storage/
+chain_of_custody/custody_log.json
+*.lime
+*.lime.gz
+*.pdf
+*.log
+*.bak*
+*.env
+__pycache__/
+*.pyc
+.DS_Store

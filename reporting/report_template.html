@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Forensic Report — {{ case.id }}</title>
+<style>
+  :root {
+    --navy:#0f1b2d; --navy2:#16263d; --slate:#33485f;
+    --teal:#1f9d8f; --teal-d:#157065;
+    --red:#c0392b; --amber:#e08e0b; --green:#2e8b57;
+    --ink:#1c2733; --muted:#667686; --line:#d9e0e7; --bg:#ffffff;
+    --zebra:#f4f7fa;
+  }
+  * { box-sizing:border-box; }
+  html,body { margin:0; padding:0; }
+  body {
+    font-family:"Helvetica Neue", Arial, "Liberation Sans", sans-serif;
+    color:var(--ink); font-size:10.5px; line-height:1.5; background:var(--bg);
+  }
+  .pad { padding:0 16mm; }
+  h1,h2,h3 { margin:0; font-weight:700; }
+  p { margin:0 0 7px 0; }
+  table { width:100%; border-collapse:collapse; }
+  .mono { font-family:"Courier New", "Liberation Mono", monospace; }
+
+  /* ---------- COVER ---------- */
+  .cover {
+    background:var(--navy); color:#eaf0f6; padding:34mm 16mm 20mm 16mm;
+    page-break-after:always; height:1070px; position:relative;
+  }
+  .cover .kicker { color:var(--teal); letter-spacing:3px; font-size:11px; font-weight:700; text-transform:uppercase; }
+  .cover h1 { font-size:30px; line-height:1.15; margin:14px 0 6px 0; color:#fff; }
+  .cover .sub { color:#9fb2c6; font-size:13px; margin-bottom:40px; }
+  .cover .rule {
+    border-left:4px solid var(--teal); padding:10px 0 10px 16px; margin:28px 0 34px 0;
+  }
+  .cover .rule .label { color:#7e93a8; font-size:9px; text-transform:uppercase; letter-spacing:1.5px; }
+  .cover .rule .val { color:#fff; font-size:15px; font-weight:700; }
+  .cover .meta-grid { width:100%; margin-top:10px; }
+  .cover .meta-grid td { padding:8px 0; border-top:1px solid #25364c; vertical-align:top; }
+  .cover .meta-grid .k { color:#7e93a8; font-size:9px; text-transform:uppercase; letter-spacing:1.2px; width:42%; }
+  .cover .meta-grid .v { color:#eaf0f6; font-size:12px; text-align:right; }
+  .classification {
+    position:absolute; top:16mm; right:16mm;
+    border:1.5px solid var(--red); color:#ff8a7a; font-size:10px; font-weight:700;
+    letter-spacing:2px; padding:4px 10px; border-radius:3px; text-transform:uppercase;
+  }
+  .cover .footer-brand {
+    position:absolute; bottom:16mm; left:16mm; right:16mm;
+    border-top:1px solid #25364c; padding-top:10px; color:#7e93a8; font-size:9px;
+    display:block;
+  }
+
+  /* ---------- SECTIONS ---------- */
+  .section { padding-top:10mm; }
+  .section-head {
+    border-bottom:2px solid var(--navy); margin-bottom:10px; padding-bottom:5px;
+  }
+  .section-head .num {
+    display:inline-block; background:var(--navy); color:#fff; font-size:10px; font-weight:700;
+    padding:2px 8px; border-radius:3px; margin-right:8px; vertical-align:middle;
+  }
+  .section-head h2 { display:inline; font-size:15px; color:var(--navy); vertical-align:middle; }
+
+  /* badges */
+  .badge { display:inline-block; padding:2px 8px; border-radius:10px; font-size:9px; font-weight:700; letter-spacing:.5px; }
+  .b-crit { background:#fbe3df; color:var(--red); }
+  .b-high { background:#fcefd9; color:var(--amber); }
+  .b-ok   { background:#dff0e6; color:var(--green); }
+  .b-teal { background:#dcf2ef; color:var(--teal-d); }
+  .b-navy { background:#e2e8f0; color:var(--navy); }
+
+  /* key-value strip */
+  .kv { width:100%; margin:6px 0 2px 0; }
+  .kv td { padding:6px 10px; border:1px solid var(--line); vertical-align:top; }
+  .kv .k { background:var(--zebra); color:var(--muted); font-size:9px; text-transform:uppercase; letter-spacing:1px; width:26%; font-weight:700; }
+
+  /* data tables */
+  table.data { margin:6px 0 4px 0; }
+  table.data th {
+    background:var(--navy); color:#fff; text-align:left; font-size:9px; font-weight:700;
+    text-transform:uppercase; letter-spacing:.6px; padding:7px 8px;
+  }
+  table.data td { padding:6px 8px; border-bottom:1px solid var(--line); font-size:9.5px; vertical-align:top; }
+  table.data tr:nth-child(even) td { background:var(--zebra); }
+  .hash { font-size:8px; word-break:break-all; color:var(--slate); }
+
+  /* callout */
+  .callout { border:1px solid var(--amber); background:#fff8ec; border-left:4px solid var(--amber);
+    padding:10px 12px; margin:8px 0; border-radius:3px; }
+  .callout.teal { border-color:var(--teal); background:#f0faf9; border-left-color:var(--teal); }
+  .callout .ttl { font-weight:700; color:var(--ink); margin-bottom:3px; font-size:11px; }
+
+  /* chain of custody */
+  .coc-step { border:1px solid var(--line); border-radius:4px; padding:8px 10px; margin-bottom:6px; }
+  .coc-step .top { margin-bottom:3px; }
+  .coc-step .act { font-weight:700; color:var(--navy); font-size:10.5px; }
+  .coc-step .ts { color:var(--muted); font-size:9px; }
+  .coc-hashes { font-size:8px; }
+  .coc-hashes .lbl { color:var(--muted); display:inline-block; width:78px; }
+  .arrow { color:var(--teal); font-weight:700; text-align:center; font-size:12px; margin:-2px 0 4px 0; }
+
+  .findings-block { margin-bottom:10px; }
+  .findings-block .fh { font-weight:700; color:var(--navy); font-size:11px; border-bottom:1px solid var(--line); padding-bottom:3px; margin-bottom:5px; }
+  ul.tight { margin:4px 0 8px 0; padding-left:18px; }
+  ul.tight li { margin-bottom:3px; }
+
+  .summary-box { background:var(--zebra); border:1px solid var(--line); border-radius:4px; padding:12px 14px; }
+  .metricrow { width:100%; margin:10px 0; }
+  .metricrow td { text-align:center; padding:10px 6px; border:1px solid var(--line); }
+  .metricrow .big { font-size:20px; font-weight:700; color:var(--teal-d); }
+  .metricrow .cap { font-size:8px; text-transform:uppercase; letter-spacing:1px; color:var(--muted); }
+  .small { font-size:9px; color:var(--muted); }
+
+  /* charts */
+  .chart-card { border:1px solid var(--line); border-radius:5px; padding:10px 12px; margin:8px 0; }
+  .chart-title { font-weight:700; color:var(--navy); font-size:10.5px; margin-bottom:8px; }
+  .chart-sub { color:var(--muted); font-size:8px; margin-top:6px; }
+
+  table.colchart { width:100%; border-collapse:collapse; }
+  table.colchart td.plot { vertical-align:bottom; height:118px; text-align:center; padding:0 2px; }
+  table.colchart .cnt { font-size:7px; color:var(--muted); margin-bottom:2px; }
+  table.colchart .bar { width:60%; margin:0 auto; background:var(--navy); border-radius:2px 2px 0 0; min-height:1px; }
+  table.colchart .bar.cur { background:var(--red); }
+  table.colchart td.xlab { text-align:center; font-size:6.5px; color:var(--muted); padding-top:3px; }
+
+  table.hbars { width:100%; border-collapse:collapse; }
+  table.hbars td { padding:3px 4px; font-size:9px; vertical-align:middle; }
+  table.hbars td.lbl { width:34%; color:var(--ink); }
+  table.hbars td.trk { width:56%; }
+  table.hbars td.trk .fill { height:11px; background:var(--slate); border-radius:3px; min-width:1px; }
+  table.hbars td.trk .fill.cur { background:var(--teal); }
+  table.hbars td.val { width:10%; text-align:right; font-weight:700; color:var(--navy); }
+
+  .kpi-strip { width:100%; margin:8px 0; }
+  .kpi-strip td { border:1px solid var(--line); text-align:center; padding:9px 6px; width:33%; }
+  .kpi-strip .v { font-size:16px; font-weight:700; color:var(--navy); }
+  .kpi-strip .c { font-size:8px; text-transform:uppercase; letter-spacing:.8px; color:var(--muted); }
+
+  .mttr { border:1px solid var(--teal); background:#f0faf9; border-radius:5px; padding:12px 14px; margin:8px 0; }
+  .mttr table { width:100%; }
+  .mttr td { vertical-align:middle; }
+  .mttr .auto { font-size:24px; font-weight:700; color:var(--teal-d); line-height:1; }
+  .mttr .vs { color:var(--muted); font-size:9px; }
+  .mttr .man { font-size:17px; font-weight:700; color:var(--slate); }
+  .mttr .badge-big { background:var(--teal); color:#fff; font-size:13px; font-weight:700; padding:6px 13px; border-radius:14px; white-space:nowrap; }
+  .mttr .cap { font-size:8px; color:var(--muted); margin-top:8px; }
+
+  /* measured MTTE comparison (horizontal, log-scaled widths supplied by data) */
+  table.mtte-cmp { width:100%; border-collapse:collapse; margin-top:4px; }
+  table.mtte-cmp td { padding:5px 4px; font-size:9px; vertical-align:middle; }
+  table.mtte-cmp td.lbl { width:32%; color:var(--ink); }
+  table.mtte-cmp td.lbl .sub { color:var(--muted); font-size:7.5px; }
+  table.mtte-cmp td.trk { width:50%; }
+  table.mtte-cmp td.trk .fill { height:14px; border-radius:3px; min-width:2px; }
+  table.mtte-cmp .f-auto { background:var(--teal); }
+  table.mtte-cmp .f-run  { background:var(--amber); }
+  table.mtte-cmp .f-real { background:var(--red); }
+  table.mtte-cmp td.val { width:18%; text-align:right; font-weight:700; color:var(--navy); }
+
+
+  /* fixed footer repeated on every page by wkhtmltopdf */
+  .pagefoot {
+    position:fixed; bottom:0; left:0; right:0; height:9mm;
+    border-top:1px solid var(--line); background:#fff;
+    color:var(--muted); font-size:7.5px; letter-spacing:.4px;
+    padding:3px 16mm 0 16mm;
+  }
+  .pagefoot .l { float:left; color:var(--red); font-weight:700; }
+  .pagefoot .r { float:right; }
+
+</style>
+</head>
+<body>
+
+<div class="pagefoot">
+  <span class="l">{{ case.classification|upper }}</span>
+  <span class="r">{{ case.id }} &nbsp;·&nbsp; {{ framework.name }} v{{ framework.version }}</span>
+</div>
+
+<!-- ============ COVER ============ -->
+<div class="cover">
+  <div class="classification">{{ case.classification }}</div>
+  <div class="kicker">{{ framework.name }}</div>
+  <h1>Automated Forensic<br>Investigation Report</h1>
+  <div class="sub">Near Real-Time Incident Response &amp; Evidence Collection</div>
+
+  <div class="rule">
+    <div class="label">Triggering Detection</div>
+    <div class="val">{{ incident.rule_desc }}</div>
+  </div>
+
+  <table class="meta-grid">
+    <tr><td class="k">Case Identifier</td><td class="v mono">{{ case.id }}</td></tr>
+    <tr><td class="k">Date Generated</td><td class="v">{{ case.generated }}</td></tr>
+    <tr><td class="k">Severity</td><td class="v">{{ incident.severity_label }} (level {{ incident.level }})</td></tr>
+    <tr><td class="k">MITRE ATT&amp;CK</td><td class="v">{% if incident.has_mitre %}{{ incident.mitre_id }} — {{ incident.mitre_technique }}{% else %}Not mapped (non-ATT&amp;CK rule){% endif %}</td></tr>
+    <tr><td class="k">Affected Asset</td><td class="v">{{ incident.agent_name }} ({{ incident.agent_ip }})</td></tr>
+    <tr><td class="k">Analyst</td><td class="v">{{ case.analyst }}</td></tr>
+    <tr><td class="k">Artefacts Collected</td><td class="v">{{ evidence|length }} items</td></tr>
+  </table>
+
+  <div class="footer-brand">
+    {{ framework.org }} &nbsp;·&nbsp; {{ framework.long }} &nbsp;·&nbsp; Generated by {{ framework.name }} v{{ framework.version }}
+  </div>
+</div>
+
+<!-- ============ 1. EXECUTIVE SUMMARY ============ -->
+<div class="section pad">
+  <div class="section-head"><span class="num">1</span><h2>Executive Summary</h2></div>
+  <div class="summary-box">
+    <p>{{ summary.text }}</p>
+  </div>
+  <table class="metricrow">
+    <tr>
+      <td><div class="big">{{ summary.ttE }}</div><div class="cap">Time&nbsp;to&nbsp;Evidence</div></td>
+      <td><div class="big">{{ evidence|length }}</div><div class="cap">Artefacts</div></td>
+      <td><div class="big">{{ summary.total_size }}</div><div class="cap">Acquired{% if summary.stored_size %}&nbsp;·&nbsp;{{ summary.stored_size }}&nbsp;stored{% endif %}</div></td>
+      <td><div class="big">{{ summary.coc_status }}</div><div class="cap">Custody&nbsp;Chain</div></td>
+    </tr>
+  </table>
+</div>
+
+{% if show_telemetry %}
+<!-- ============ 2. ANALYTICS & TRENDS ============ -->
+<div class="section pad">
+  <div class="section-head"><span class="num">2</span><h2>System Telemetry &amp; Effectiveness (non-evidentiary)</h2></div>
+
+  <!-- Key analyst metric: MTTE -->
+  <div class="mttr">
+    <table>
+      <tr>
+        <td style="width:62%">
+          <span class="auto">{{ analytics.mtte_auto }}</span>
+          <span class="vs">&nbsp;automated&nbsp; vs &nbsp;</span>
+          <span class="man">{{ analytics.mtte_manual }}</span>
+          <span class="vs">&nbsp;manual (KLM-modeled)</span>
+          <div class="cap">Time&nbsp;to&nbsp;evidence of this case, alert to sealed record ({{ analytics.mtte_resolution }}), against manual baseline {{ analytics.stratum }} of the same artefact set</div>
+        </td>
+        <td style="width:38%; text-align:right">
+          <span class="badge-big">{{ analytics.mtte_reduction }} faster</span>
+        </td>
+      </tr>
+    </table>
+  </div>
+
+  <table class="kpi-strip">
+    <tr>
+      <td><div class="v">{{ analytics.kpi_detect_response }}</div><div class="c">Alert → Sealed Evidence</div></td>
+      <td><div class="v">{{ analytics.kpi_integrity }}</div><div class="c">Evidence Integrity</div></td>
+      <td><div class="v">{{ analytics.kpi_automation }}</div><div class="c">Pipeline Automation</div></td>
+    </tr>
+  </table>
+
+  <!-- Measured MTTE comparison -->
+  <div class="chart-card">
+    <div class="chart-title">Measured Time-to-Evidence — automated pipeline vs manual collection (identical artefact set)</div>
+    <table class="mtte-cmp">
+      <tr>
+        <td class="lbl">Automated orchestrator<div class="sub">this case · measured</div></td>
+        <td class="trk"><div class="fill f-auto" style="width:{{ analytics.cmp_auto_w }}%"></div></td>
+        <td class="val">{{ analytics.cmp_auto }}</td>
+      </tr>
+      <tr>
+        <td class="lbl">Manual (KLM model)<div class="sub">skilled typist K=0.28 · lower bound</div></td>
+        <td class="trk"><div class="fill f-run" style="width:{{ analytics.cmp_run_w }}%"></div></td>
+        <td class="val">{{ analytics.cmp_run }}</td>
+      </tr>
+      <tr>
+        <td class="lbl">Manual (KLM model)<div class="sub">average typist K=0.50 · upper bound</div></td>
+        <td class="trk"><div class="fill f-real" style="width:{{ analytics.cmp_real_w }}%"></div></td>
+        <td class="val">{{ analytics.cmp_real }}</td>
+      </tr>
+    </table>
+    <div class="chart-sub">Log-scaled. Automation is <b>{{ analytics.mtte_reduction }}</b> faster than manual baseline {{ analytics.stratum }} ({{ analytics.baseline_point }} s at K = 0.40 s; {{ analytics.ratio_range }} over K = 0.28–0.50 s).
+    Manual baseline = Keystroke-Level Model of analyst input (Card, Moran &amp; Newell 1983; M = 1.35 s, 1016 keystrokes) + {{ analytics.baseline_system }}. Error-free and without notification or triage time, hence a conservative lower bound.</div>
+  </div>
+
+  <!-- Incident frequency over time -->
+  <div class="chart-card">
+    <div class="chart-title">{{ analytics.freq_title }} &nbsp;<span class="badge b-navy">SEALED CASES</span></div>
+    <table class="colchart">
+      <tr>
+        {% for b in analytics.frequency %}
+        <td class="plot">
+          <div class="cnt">{{ b.count }}</div>
+          <div class="bar {% if b.current %}cur{% endif %}" style="height:{{ b.h }}px"></div>
+        </td>
+        {% endfor %}
+      </tr>
+      <tr>
+        {% for b in analytics.frequency %}<td class="xlab">{{ b.label }}</td>{% endfor %}
+      </tr>
+    </table>
+    <div class="chart-sub">Highlighted bar = week of this case. Counts are computed from the sealed cases of stratum {{ analytics.stratum }} on this deployment (validation cases excluded); they reflect the controlled evaluation runs, not real-world attack frequency.</div>
+  </div>
+
+  <!-- Tactic distribution -->
+  <div class="chart-card">
+    <div class="chart-title">MITRE ATT&amp;CK tactics of the sealed cases of stratum {{ analytics.stratum }} ({{ analytics.n_context }} cases) &nbsp;<span class="badge b-navy">SEALED CASES</span></div>
+    <table class="hbars">
+      {% for t in analytics.tactics %}
+      <tr>
+        <td class="lbl">{{ t.name }}</td>
+        <td class="trk"><div class="fill {% if t.current %}cur{% endif %}" style="width:{{ t.pct }}%"></div></td>
+        <td class="val">{{ t.count }}</td>
+      </tr>
+      {% endfor %}
+    </table>
+    <div class="chart-sub">Highlighted = tactic of this incident ({{ analytics.current_tactic }}). The distribution reflects the controlled evaluation runs.</div>
+  </div>
+</div>
+
+{% endif %}
+<!-- ============ 3. INCIDENT METADATA ============ -->
+<div class="section pad">
+  <div class="section-head"><span class="num">{% if show_telemetry %}3{% else %}2{% endif %}</span><h2>Incident Metadata</h2></div>
+  <table class="kv">
+    <tr><td class="k">Wazuh Rule ID</td><td>{{ incident.rule_id }} &nbsp; <span class="badge b-navy">level {{ incident.level }}</span> &nbsp;
+        {% if incident.severity_label == 'Critical' %}<span class="badge b-crit">CRITICAL</span>
+        {% else %}<span class="badge b-high">HIGH</span>{% endif %}</td></tr>
+    <tr><td class="k">Description</td><td>{{ incident.rule_desc }}</td></tr>
+    <tr><td class="k">Detection Time (UTC)</td><td class="mono">{{ incident.detect_time }}</td></tr>
+    <tr><td class="k">Evidence Sealed (UTC)</td><td class="mono">{{ incident.response_time }} &nbsp; <span class="badge b-teal">Δ {{ summary.ttE }}</span></td></tr>
+    <tr><td class="k">Affected Asset</td><td>{{ incident.agent_name }} &nbsp;·&nbsp; {{ incident.agent_ip }}{% if incident.agent_os and incident.agent_os != '—' %} &nbsp;·&nbsp; {{ incident.agent_os }}{% endif %}</td></tr>
+    <tr><td class="k">Acquisition Method</td><td>{{ incident.acq_method }}</td></tr>
+  </table>
+</div>
+
+<!-- ============ 3. MITRE ATT&CK MAPPING ============ -->
+<div class="section pad">
+  <div class="section-head"><span class="num">{% if show_telemetry %}4{% else %}3{% endif %}</span><h2>MITRE ATT&amp;CK Mapping</h2></div>
+  {% if incident.has_mitre %}
+  <table class="data">
+    <tr><th style="width:14%">Technique ID</th><th style="width:26%">Technique</th><th style="width:22%">Tactic</th><th>Observed Behaviour</th></tr>
+    <tr>
+      <td><span class="badge b-crit">{{ incident.mitre_id }}</span></td>
+      <td>{{ incident.mitre_technique }}</td>
+      <td>{{ incident.mitre_tactic }}</td>
+      <td>{{ incident.mitre_behaviour }}</td>
+    </tr>
+  </table>
+  <p class="small">Mapping derived automatically from Wazuh rule metadata at detection time and embedded into the case manifest.</p>
+  {% else %}
+  <div class="callout">
+    <div class="ttl">No ATT&amp;CK mapping for this detection</div>
+    The triggering rule ({{ incident.rule_id }} — {{ incident.rule_desc }}) is a host-based
+    anomaly/rootcheck detection that is not associated with a specific MITRE ATT&amp;CK technique.
+    Evidence was collected under the standard pipeline regardless of mapping status.
+  </div>
+  {% endif %}
+</div>
+
+<!-- ============ 4. EVIDENCE INVENTORY ============ -->
+<div class="section pad">
+  <div class="section-head"><span class="num">{% if show_telemetry %}5{% else %}4{% endif %}</span><h2>Evidence Inventory</h2></div>
+  <table class="data">
+    <tr><th style="width:30%">Artefact</th><th style="width:14%">Type</th><th style="width:10%">Size</th><th>SHA-256</th></tr>
+    {% for e in evidence %}
+    <tr>
+      <td class="mono">{{ e.name }}</td>
+      <td>{{ e.type }}</td>
+      <td>{{ e.size }}</td>
+      <td class="hash mono">{{ e.sha256 }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+  <p class="small">All artefacts hashed at acquisition time with SHA-256. Timestamps are recorded in UTC (subject and analyst clocks NTP-synchronised); as a live acquisition, the collector's own SSH log-ins{% if incident.via_sudo %} and sudo commands{% endif %} are themselves captured in the acquired authentication and journal logs. Integrity is anchored in the chain-of-custody ledger (§{% if show_telemetry %}6{% else %}5{% endif %}).</p>
+</div>
+
+<!-- ============ 5. CHAIN OF CUSTODY ============ -->
+<div class="section pad">
+  <div class="section-head"><span class="num">{% if show_telemetry %}6{% else %}5{% endif %}</span><h2>Chain of Custody</h2></div>
+  <div class="callout teal">
+    <div class="ttl">Integrity: {{ coc.status }}</div>
+    Tamper-evident hash chain — each record binds the previous record's hash (prev_hash → current_hash).
+    Any modification to a record invalidates every subsequent link.
+  </div>
+  {% for s in coc.steps %}
+  <div class="coc-step">
+    <div class="top"><span class="act">{{ loop.index }}. {{ s.action }}</span> &nbsp; <span class="ts mono">{{ s.ts }}</span></div>
+    <div class="coc-hashes mono">
+      <div><span class="lbl">prev_hash</span> {{ s.prev }}</div>
+      <div><span class="lbl">current_hash</span> {{ s.cur }}</div>
+    </div>
+  </div>
+  {% if not loop.last %}<div class="arrow">↓</div>{% endif %}
+  {% endfor %}
+</div>
+
+<!-- ============ 6. FINDINGS ============ -->
+<div class="section pad">
+  <div class="section-head"><span class="num">{% if show_telemetry %}7{% else %}6{% endif %}</span><h2>Forensic Findings</h2></div>
+
+  <div class="findings-block">
+    <div class="fh">{% if show_telemetry %}7.1{% else %}6.1{% endif %} — Volatile State (Processes / Network / Open Files)</div>
+    <ul class="tight">
+      {% for f in findings.volatile %}<li>{{ f }}</li>{% endfor %}
+    </ul>
+  </div>
+
+  <div class="findings-block">
+    <div class="fh">{% if show_telemetry %}7.2{% else %}6.2{% endif %} — System &amp; Authentication Logs</div>
+    <ul class="tight">
+      {% for f in findings.logs %}<li>{{ f }}</li>{% endfor %}
+    </ul>
+  </div>
+
+  <div class="findings-block">
+    <div class="fh">{% if show_telemetry %}7.3{% else %}6.3{% endif %} — {{ findings.timeline_label }}</div>
+    <ul class="tight">
+      {% for f in findings.timeline %}<li>{{ f }}</li>{% endfor %}
+    </ul>
+  </div>
+
+  <div class="findings-block">
+    <div class="fh">{% if show_telemetry %}7.4{% else %}6.4{% endif %} — Memory Analysis</div>
+    <ul class="tight">
+      {% for f in findings.memory %}<li>{{ f }}</li>{% endfor %}
+    </ul>
+    {% if findings.memory_note %}<div class="callout">
+      <div class="ttl">Memory analysis on ARM64</div>
+      {{ findings.memory_note }}
+    </div>{% endif %}
+  </div>
+
+  {% if findings.threat %}
+  <div class="findings-block">
+    <div class="fh">{% if show_telemetry %}7.5{% else %}6.5{% endif %} — Post-Collection Threat Analysis (read-only)</div>
+    <ul class="tight">
+      {% for f in findings.threat %}<li>{{ f }}</li>{% endfor %}
+    </ul>
+  </div>
+  {% endif %}
+</div>
+
+<!-- ============ STANDARDS & REGULATORY ALIGNMENT ============ -->
+<div class="section pad">
+  <div class="section-head"><span class="num">{% if show_telemetry %}8{% else %}7{% endif %}</span><h2>Standards &amp; Regulatory Alignment</h2></div>
+  <table class="data">
+    <tr><th style="width:21%">Reference</th><th style="width:27%">Requirement</th><th>How this case addresses it</th><th style="width:12%">Status</th></tr>
+    {% for r in standards %}
+    <tr><td>{{ r.ref }}</td><td>{{ r.req }}</td><td>{{ r.how }}</td><td><b>{{ r.status }}</b></td></tr>
+    {% endfor %}
+  </table>
+  <p class="small">Technical self-assessment derived from the records of this case; it is not a legal opinion. Legal
+  admissibility depends on the proceedings and the jurisdiction in which the evidence is used.</p>
+</div>
+
+<!-- ============ 7. RECOMMENDATIONS ============ -->
+<div class="section pad">
+  <div class="section-head"><span class="num">{% if show_telemetry %}9{% else %}8{% endif %}</span><h2>Analyst Recommendations</h2></div>
+  <ul class="tight">
+    {% for r in recommendations %}<li>{{ r }}</li>{% endfor %}
+  </ul>
+</div>
+
+<!-- ============ 8. APPENDIX ============ -->
+<div class="section pad">
+  <div class="section-head"><span class="num">{% if show_telemetry %}10{% else %}9{% endif %}</span><h2>Appendix — Verification</h2></div>
+  <p class="small">Independent verification of the custody chain can be performed on the analyst node:</p>
+  <table class="kv">
+    <tr><td class="k">Verify custody ledger</td><td class="mono">python3 chain_of_custody/verify_chain.py</td></tr>
+    <tr><td class="k">Evidence root</td><td class="mono">/opt/forensic-orchestrator/storage/cases/{{ case.id }}/</td></tr>
+    <tr><td class="k">Manifest</td><td class="mono">case_manifest.json</td></tr>
+  </table>
+  <p class="small" style="margin-top:14px;">This report was generated automatically by {{ framework.name }} v{{ framework.version }}. {{ framework.org }}.</p>
+</div>
+
+</body>
+</html>
