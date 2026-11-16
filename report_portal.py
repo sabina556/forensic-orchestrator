@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+
 """Forensic Reports portal - browse cases and download/regenerate PDF reports.
 Lab PoC; binds to the testbed LAN (read-only browse + regenerate on demand)."""
 import os, re, json, subprocess
