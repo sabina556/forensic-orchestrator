@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+
 """
 post_seal_hook.py - post-seal service of the forensic orchestrator.
 
