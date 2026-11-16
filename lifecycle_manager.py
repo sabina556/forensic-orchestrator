@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+
 # lifecycle_manager.py - tiered storage lifecycle for forensic cases.
 # Forensic-safe: integrity verified before AND after every transition;
 # lossless gzip only; sealed SHA-256 re-verifies on extraction; legal_hold
