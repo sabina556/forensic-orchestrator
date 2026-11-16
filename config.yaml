@@ -58,9 +58,9 @@ collection:
     - "/home"
     - "/root"
 
-# ----------------------------------------------------------------
+
 # Analyzers
-# ----------------------------------------------------------------
+
 analyzers:
   volatility:
     enabled: false
@@ -84,9 +84,9 @@ analyzers:
     icat_bin: "/usr/bin/icat"
     mmls_bin: "/usr/bin/mmls"
 
-# ----------------------------------------------------------------
+
 # Chain of custody
-# ----------------------------------------------------------------
+
 chain_of_custody:
   custody_log: "/opt/forensic-orchestrator/chain_of_custody/custody_log.json"
   analyst: "Sabina Tursunova"
