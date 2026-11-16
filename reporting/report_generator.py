@@ -311,10 +311,18 @@ def threat_section(case_dir, case_id):
     out = []
     trg = rec.get("trigger") or {}
     if rec.get("trigger_found") and trg:
-        out.append("Triggering command recovered from the acquired logs (%s): %s, issued by %s as %s on %s at %s, "
+        who = []
+        if trg.get("user"):
+            who.append("issued by %s" % html.escape(str(trg["user"])))
+        if trg.get("runas"):
+            who.append("as %s" % html.escape(str(trg["runas"])))
+        who.append(("on terminal %s" % html.escape(str(trg["tty"]))) if trg.get("tty") else "with no terminal")
+        if not trg.get("user"):
+            who.append("(the log record does not name the invoking user)")
+        out.append("Triggering command recovered from the acquired logs (%s): %s, %s, at %s, "
                    "%.2f s before the alert." % (", ".join(trg.get("sources") or []),
-                   html.escape(trg.get("command", "")[:120]), trg.get("user"), trg.get("runas"),
-                   trg.get("tty") or "no terminal", trg.get("time"), -float(trg.get("minus_alert_s") or 0)))
+                   html.escape(trg.get("command", "")[:120]), " ".join(who),
+                   trg.get("time"), -float(trg.get("minus_alert_s") or 0)))
     sd = rec.get("state_diff") or {}
     if sd.get("reference_case"):
         bits = []
