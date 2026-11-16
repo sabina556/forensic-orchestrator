@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+
 """Stratum B content validation: stream a memory image (raw/LiME, optionally gzip)
 through a YARA marker rule. Read-only on evidence; writes JSON report only."""
 import sys, os, gzip, json, hashlib, datetime, yara
