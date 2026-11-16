@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+
 """
 orchestrator.py — central Forensic Orchestrator.
 
@@ -27,7 +27,7 @@ Run:
 
 Wazuh-Based Automated Forensic Framework
 Politecnico di Torino — MSc Cybersecurity 2026
-Author: Sabina Tursunova
+
 """
 
 import json
