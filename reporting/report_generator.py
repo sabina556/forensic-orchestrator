@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+
 """
 report_generator.py — Automated forensic PDF report generator.
 
